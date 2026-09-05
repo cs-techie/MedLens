@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { initialPatientProfile, initialDocuments, initialMedicalRecord, emptyPatientProfile, emptyMedicalRecord } from "@/lib/store";
-
+import { initialPatientProfile, initialDocuments, initialMedicalRecord } from "@/lib/store";
 
 describe("Patient Intake & Document State Store (store.ts)", () => {
   it("exports initialPatientProfile with user provenance and default fields", () => {
@@ -33,13 +32,4 @@ describe("Patient Intake & Document State Store (store.ts)", () => {
     expect(initialMedicalRecord.ai_summary?.text).toContain("microcytic anemia");
     expect(initialMedicalRecord.ai_summary?.disclaimer).toContain("informational and not a diagnosis");
   });
-
-  it("exports emptyPatientProfile and emptyMedicalRecord for unpopulated state", () => {
-    expect(emptyPatientProfile.name.value).toBe("");
-    expect(emptyPatientProfile.symptoms).toHaveLength(0);
-    expect(emptyMedicalRecord.documents).toHaveLength(0);
-    expect(emptyMedicalRecord.ai_summary).toBeNull();
-  });
-
 });
-

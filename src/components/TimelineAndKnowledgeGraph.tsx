@@ -20,7 +20,6 @@ import {
 
 interface TimelineAndKnowledgeGraphProps {
   record: MedicalRecord;
-  onLoadDemoData?: () => void;
 }
 
 interface GraphNode {
@@ -44,8 +43,7 @@ interface GraphEdge {
   label?: string;
 }
 
-export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps> = ({ record, onLoadDemoData }) => {
-
+export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps> = ({ record }) => {
   const [activeSubTab, setActiveSubTab] = useState<"graph" | "timeline">("graph");
   const [expandedDocId, setExpandedDocId] = useState<string | null>(
     record.documents[0]?.document_id || null
@@ -449,28 +447,9 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
             </span>
           </div>
 
-          {record.documents.length === 0 ? (
-            <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl space-y-3 my-4">
-              <Calendar className="w-8 h-8 text-slate-300 mx-auto" aria-hidden="true" />
-              <p className="text-sm font-bold text-gray-800">No Medical Reports Uploaded</p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Upload a lab report in <strong>Tab 2 (Report Processing)</strong> to view chronological report timelines.
-              </p>
-              {onLoadDemoData && (
-                <button
-                  type="button"
-                  onClick={onLoadDemoData}
-                  className="px-3.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#0EA5E9] border border-sky-300 rounded-lg text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
-                >
-                  🧪 Load Demo Sample Data
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-              {record.documents.map((doc) => {
-                const isExpanded = expandedDocId === doc.document_id;
-
+          <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+            {record.documents.map((doc) => {
+              const isExpanded = expandedDocId === doc.document_id;
               return (
                 <div key={doc.document_id} className="relative space-y-2">
                   <div className="absolute -left-[29px] top-1.5 w-4 h-4 rounded-full bg-[#0EA5E9] border-4 border-white shadow-xs" aria-hidden="true" />
@@ -533,10 +512,8 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
               );
             })}
           </div>
-          )}
         </div>
       )}
     </div>
   );
 };
-

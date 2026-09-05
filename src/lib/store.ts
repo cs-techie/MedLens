@@ -132,24 +132,6 @@ Notes: Low ferritin and serum iron with elevated TIBC pattern consistent with ir
   }
 ];
 
-export const emptyPatientProfile: PatientProfile = {
-  name: createDefaultField(""),
-  age: createDefaultField(0),
-  sex: createDefaultField("Female"),
-  symptoms: [],
-  allergies: [],
-  conditions: [],
-  medications: [],
-  notes: createDefaultField(""),
-};
-
-export const emptyMedicalRecord: MedicalRecord = {
-  patient: emptyPatientProfile,
-  documents: [],
-  ai_summary: null,
-};
-
-
 export const initialMedicalRecord: MedicalRecord = {
   patient: initialPatientProfile,
   documents: initialDocuments,
@@ -161,4 +143,3 @@ export const initialMedicalRecord: MedicalRecord = {
     disclaimer: "This summary is informational and not a diagnosis."
   }
 };
-

@@ -15,15 +15,12 @@ import {
 interface AISummaryViewerProps {
   record: MedicalRecord;
   onSummaryGenerated: (summary: AISummary) => void;
-  onLoadDemoData?: () => void;
 }
 
 export const AISummaryViewer: React.FC<AISummaryViewerProps> = ({
   record,
   onSummaryGenerated,
-  onLoadDemoData,
 }) => {
-
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState<AISummary | null>(record.ai_summary);
   const [filterPassed, setFilterPassed] = useState(true);
@@ -130,7 +127,7 @@ export const AISummaryViewer: React.FC<AISummaryViewerProps> = ({
       </div>
 
       {/* Summary Box */}
-      {summary ? (
+      {summary && (
         <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 md:p-8 shadow-md space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
@@ -155,25 +152,7 @@ export const AISummaryViewer: React.FC<AISummaryViewerProps> = ({
             </div>
           </div>
         </div>
-      ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md text-center space-y-4">
-          <Sparkles className="w-10 h-10 text-amber-400 mx-auto" aria-hidden="true" />
-          <h3 className="text-base font-bold text-gray-800">No AI Summary Generated Yet</h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Click <strong>Generate Safe AI Summary</strong> above to evaluate patient intake and lab findings, or load sample demo data.
-          </p>
-          {onLoadDemoData && (
-            <button
-              type="button"
-              onClick={onLoadDemoData}
-              className="px-4 py-2 bg-sky-50 hover:bg-sky-100 text-[#0EA5E9] border border-sky-300 rounded-xl text-xs font-bold transition shadow-xs focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
-            >
-              🧪 Load Demo Sample Data
-            </button>
-          )}
-        </div>
       )}
     </div>
   );
 };
-

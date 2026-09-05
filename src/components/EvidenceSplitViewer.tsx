@@ -12,10 +12,9 @@ import {
 
 interface EvidenceSplitViewerProps {
   documents: DocumentRecord[];
-  onLoadDemoData?: () => void;
 }
 
-export const EvidenceSplitViewer: React.FC<EvidenceSplitViewerProps> = ({ documents, onLoadDemoData }) => {
+export const EvidenceSplitViewer: React.FC<EvidenceSplitViewerProps> = ({ documents }) => {
   const [selectedDocId, setSelectedDocId] = useState<string>(
     documents[0]?.document_id || ""
   );
@@ -64,24 +63,10 @@ export const EvidenceSplitViewer: React.FC<EvidenceSplitViewerProps> = ({ docume
       </div>
 
       {!activeDoc ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-md space-y-4 max-w-lg mx-auto my-8">
-          <Eye className="w-10 h-10 text-slate-300 mx-auto" aria-hidden="true" />
-          <h3 className="text-base font-bold text-gray-800">No Report Documents Uploaded</h3>
-          <p className="text-xs text-slate-500">
-            Please upload a clinical lab report in <strong>Tab 2 (Report Processing)</strong> to inspect split-pane OCR source evidence, or load sample demo data.
-          </p>
-          {onLoadDemoData && (
-            <button
-              type="button"
-              onClick={onLoadDemoData}
-              className="px-4 py-2 bg-sky-50 hover:bg-sky-100 text-[#0EA5E9] border border-sky-300 rounded-xl text-xs font-bold transition shadow-xs focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
-            >
-              🧪 Load Demo Sample Data
-            </button>
-          )}
+        <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+          No medical report documents uploaded. Please upload a report in Tab 2.
         </div>
       ) : (
-
         /* Split-Pane View */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT PANE: Source Document & Visual OCR Text (7 cols) */}

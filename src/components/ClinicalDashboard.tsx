@@ -18,16 +18,13 @@ interface ClinicalDashboardProps {
   record: MedicalRecord;
   onVerifyField: (docId: string, labId: string) => void;
   onEditField: (docId: string, labId: string, newValue: number | string) => void;
-  onLoadDemoData?: () => void;
 }
 
 export const ClinicalDashboard: React.FC<ClinicalDashboardProps> = ({
   record,
   onVerifyField,
   onEditField,
-  onLoadDemoData,
 }) => {
-
   const [selectedExplainResult, setSelectedExplainResult] = useState<ExtractedLabResult | null>(null);
   const [editingResultId, setEditingResultId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -96,30 +93,24 @@ export const ClinicalDashboard: React.FC<ClinicalDashboardProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
             <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Patient Name</span>
-            <div className="text-base font-bold text-gray-900">
-              {record.patient.name.value || <span className="text-amber-700 font-semibold italic text-sm">Not Provided (Fill Tab 1)</span>}
-            </div>
+            <div className="text-base font-bold text-gray-900">{record.patient.name.value}</div>
           </div>
 
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
             <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Age & Sex</span>
             <div className="text-base font-bold text-gray-900">
-              {record.patient.age.value ? `${record.patient.age.value} yrs` : "0 yrs"} • {record.patient.sex.value}
+              {record.patient.age.value} yrs • {record.patient.sex.value}
             </div>
           </div>
 
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1 sm:col-span-2">
             <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Reported Symptoms</span>
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {record.patient.symptoms.length === 0 ? (
-                <span className="text-xs text-slate-400 italic">No symptoms listed</span>
-              ) : (
-                record.patient.symptoms.map((s, i) => (
-                  <span key={i} className="px-2.5 py-0.5 bg-sky-100 text-sky-900 border border-sky-300 rounded text-xs font-semibold">
-                    {s.value}
-                  </span>
-                ))
-              )}
+              {record.patient.symptoms.map((s, i) => (
+                <span key={i} className="px-2.5 py-0.5 bg-sky-100 text-sky-900 border border-sky-300 rounded text-xs font-semibold">
+                  {s.value}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -167,25 +158,10 @@ export const ClinicalDashboard: React.FC<ClinicalDashboardProps> = ({
             <tbody className="divide-y divide-slate-100 bg-white">
               {filteredResults.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 bg-slate-50">
-                    <div className="max-w-md mx-auto space-y-3">
-                      <p className="text-sm font-bold text-gray-800">No Extracted Lab Results Available</p>
-                      <p className="text-xs text-slate-500">
-                        Upload a lab report in <strong>Tab 2 (Report Processing)</strong> to extract structured laboratory data, or load sample demo data.
-                      </p>
-                      {onLoadDemoData && (
-                        <button
-                          type="button"
-                          onClick={onLoadDemoData}
-                          className="mt-2 px-4 py-2 bg-sky-50 hover:bg-sky-100 text-[#0EA5E9] border border-sky-300 rounded-xl text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
-                        >
-                          🧪 Load Demo Sample Data
-                        </button>
-                      )}
-                    </div>
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">
+                    No matching lab results found for filter condition.
                   </td>
                 </tr>
-
               ) : (
                 filteredResults.map((lab) => (
                   <tr key={lab.id} className="hover:bg-slate-50 transition">
