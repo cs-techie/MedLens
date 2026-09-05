@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { processDocumentExtraction, DEMO_SAMPLE_REPORTS } from "@/lib/ocrExtractor";
 import { sanitizeString, validateInputLength } from "@/lib/security";
+import { reportCache } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +15,36 @@ export async function POST(request: Request) {
       const sanitizedSampleId = sanitizeString(sampleId);
       const sample = DEMO_SAMPLE_REPORTS.find((s) => s.id === sanitizedSampleId);
       if (sample) {
+        const cacheKey = await reportCache.computeHash(`sample:${sanitizedSampleId}`);
+        const cachedDoc = reportCache.get(cacheKey);
+        if (cachedDoc) {
+          return NextResponse.json(
+            { success: true, document: cachedDoc, cached: true },
+            {
+              headers: {
+                "X-MedLens-Cache": "HIT",
+                "Cache-Control": "private, no-cache",
+              },
+            }
+          );
+        }
+
         const docRecord = processDocumentExtraction(
           sample.filename,
           sample.rawText,
           sample.results
         );
-        return NextResponse.json({
-          success: true,
-          document: docRecord,
-        });
+        reportCache.set(cacheKey, docRecord);
+
+        return NextResponse.json(
+          { success: true, document: docRecord, cached: false },
+          {
+            headers: {
+              "X-MedLens-Cache": "MISS",
+              "Cache-Control": "private, no-cache",
+            },
+          }
+        );
       }
     }
 
@@ -43,15 +65,36 @@ export async function POST(request: Request) {
     const sanitizedFilename = sanitizeString(filename || "Uploaded_Medical_Report.pdf");
     const sanitizedText = sanitizeString(rawText);
 
+    // Compute deterministic fingerprint for input report text
+    const cacheKey = await reportCache.computeHash(`${sanitizedFilename}:${sanitizedText}`);
+    const cachedDoc = reportCache.get(cacheKey);
+    if (cachedDoc) {
+      return NextResponse.json(
+        { success: true, document: cachedDoc, cached: true },
+        {
+          headers: {
+            "X-MedLens-Cache": "HIT",
+            "Cache-Control": "private, no-cache",
+          },
+        }
+      );
+    }
+
     const docRecord = processDocumentExtraction(
       sanitizedFilename,
       sanitizedText
     );
+    reportCache.set(cacheKey, docRecord);
 
-    return NextResponse.json({
-      success: true,
-      document: docRecord,
-    });
+    return NextResponse.json(
+      { success: true, document: docRecord, cached: false },
+      {
+        headers: {
+          "X-MedLens-Cache": "MISS",
+          "Cache-Control": "private, no-cache",
+        },
+      }
+    );
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Document extraction failed.";
     return NextResponse.json(

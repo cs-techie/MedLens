@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateSafeAISummary } from "@/lib/summaryEngine";
 import { MedicalRecord } from "@/types/medlens";
 import { sanitizePatientInput } from "@/lib/security";
+import { reportCache } from "@/lib/cache";
 
 export async function POST(request: Request) {
   try {
@@ -18,12 +19,46 @@ export async function POST(request: Request) {
       patient: sanitizePatientInput(record.patient),
     };
 
-    const summary = await generateSafeAISummary(sanitizedRecord);
-
-    return NextResponse.json({
-      success: true,
-      summary,
+    // Deterministic cache key based on sanitized patient demographics and lab results
+    const summaryFingerprint = JSON.stringify({
+      name: sanitizedRecord.patient.name?.value,
+      age: sanitizedRecord.patient.age?.value,
+      sex: sanitizedRecord.patient.sex?.value,
+      symptoms: (sanitizedRecord.patient.symptoms || []).map((s) => s.value),
+      conditions: (sanitizedRecord.patient.conditions || []).map((c) => c.value),
+      medications: (sanitizedRecord.patient.medications || []).map((m) => m.value),
+      allergies: (sanitizedRecord.patient.allergies || []).map((a) => a.value),
+      labs: (sanitizedRecord.documents || []).flatMap((d) =>
+        (d.extracted_results || []).map((r) => `${r.test_name}:${r.value}:${r.unit}:${r.reference_range?.raw_text || ""}`)
+      ),
     });
+
+    const cacheKey = await reportCache.computeHash(`summary:${summaryFingerprint}`);
+    const cachedSummary = reportCache.get(cacheKey);
+    if (cachedSummary) {
+      return NextResponse.json(
+        { success: true, summary: cachedSummary, cached: true },
+        {
+          headers: {
+            "X-MedLens-Cache": "HIT",
+            "Cache-Control": "private, no-cache",
+          },
+        }
+      );
+    }
+
+    const summary = await generateSafeAISummary(sanitizedRecord);
+    reportCache.set(cacheKey, summary);
+
+    return NextResponse.json(
+      { success: true, summary, cached: false },
+      {
+        headers: {
+          "X-MedLens-Cache": "MISS",
+          "Cache-Control": "private, no-cache",
+        },
+      }
+    );
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Failed to generate summary.";
     return NextResponse.json(
