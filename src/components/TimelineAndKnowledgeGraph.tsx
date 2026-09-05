@@ -9,11 +9,38 @@ import {
   ChevronDown,
   ChevronUp,
   Circle,
-  Share2
+  Share2,
+  Activity,
+  Pill,
+  HeartPulse,
+  User,
+  FlaskConical,
+  Info
 } from "lucide-react";
 
 interface TimelineAndKnowledgeGraphProps {
   record: MedicalRecord;
+}
+
+interface GraphNode {
+  id: string;
+  label: string;
+  subtitle?: string;
+  type: "patient" | "condition" | "symptom" | "medication" | "lab";
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
+  x: number;
+  y: number;
+  radius: number;
+  parentId?: string;
+}
+
+interface GraphEdge {
+  from: string;
+  to: string;
+  label?: string;
 }
 
 export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps> = ({ record }) => {
@@ -21,43 +48,153 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
   const [expandedDocId, setExpandedDocId] = useState<string | null>(
     record.documents[0]?.document_id || null
   );
-  const [selectedNode, setSelectedNode] = useState<{ id: string; label: string; type: string } | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>("p1");
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
-  // Build nodes and edges for Knowledge Graph Lite
-  const patientNode = { id: "p1", label: record.patient.name.value, type: "patient", color: "#A78BFA" };
+  // SVG Canvas dimensions
+  const width = 850;
+  const height = 480;
+  const centerX = width / 2;
+  const centerY = height / 2;
 
-  const conditionNodes = record.patient.conditions.map((c, i) => ({
-    id: `c_${i}`,
-    label: c.value,
-    type: "condition",
-    color: "#60A5FA",
-  }));
+  // Build semantic multi-tiered node positions
+  const patientNode: GraphNode = {
+    id: "p1",
+    label: record.patient.name.value || "Patient Record",
+    subtitle: `${record.patient.age.value || 42} yrs, ${record.patient.sex.value || "Female"}`,
+    type: "patient",
+    color: "#8B5CF6",
+    bgColor: "#F5F3FF",
+    borderColor: "#8B5CF6",
+    textColor: "#6D28D9",
+    x: centerX,
+    y: centerY,
+    radius: 32,
+  };
 
-  const symptomNodes = record.patient.symptoms.map((s, i) => ({
-    id: `s_${i}`,
-    label: s.value,
-    type: "symptom",
-    color: "#F87171",
-  }));
+  // Conditions Tier (Inner Left Orbit)
+  const conditions = record.patient.conditions || [];
+  const conditionNodes: GraphNode[] = conditions.map((c, i) => {
+    const angle = Math.PI + (i - (conditions.length - 1) / 2) * 0.55;
+    const r = 145;
+    return {
+      id: `cond_${i}`,
+      label: c.value,
+      subtitle: "Diagnosed Condition",
+      type: "condition",
+      color: "#3B82F6",
+      bgColor: "#EFF6FF",
+      borderColor: "#3B82F6",
+      textColor: "#1D4ED8",
+      x: centerX + r * Math.cos(angle),
+      y: centerY + r * Math.sin(angle),
+      radius: 20,
+      parentId: "p1",
+    };
+  });
 
-  const medicationNodes = record.patient.medications.map((m, i) => ({
-    id: `m_${i}`,
-    label: m.value,
-    type: "medication",
-    color: "#34D399",
-  }));
+  // Symptoms Tier (Inner Bottom Orbit)
+  const symptoms = record.patient.symptoms || [];
+  const symptomNodes: GraphNode[] = symptoms.map((s, i) => {
+    const angle = (Math.PI / 2) + (i - (symptoms.length - 1) / 2) * 0.45;
+    const r = 145;
+    return {
+      id: `symp_${i}`,
+      label: s.value,
+      subtitle: "Reported Symptom",
+      type: "symptom",
+      color: "#F43F5E",
+      bgColor: "#FFF1F2",
+      borderColor: "#F43F5E",
+      textColor: "#BE123C",
+      x: centerX + r * Math.cos(angle),
+      y: centerY + r * Math.sin(angle),
+      radius: 18,
+      parentId: "p1",
+    };
+  });
 
-  const labNodes = record.documents
-    .flatMap((d) => d.extracted_results)
-    .slice(0, 6)
-    .map((l, i) => ({
-      id: `l_${i}`,
+  // Medications Tier (Outer Left Orbit - linked to conditions or patient)
+  const medications = record.patient.medications || [];
+  const medicationNodes: GraphNode[] = medications.map((m, i) => {
+    const angle = Math.PI - 0.4 + (i - (medications.length - 1) / 2) * 0.5;
+    const r = 240;
+    const parentCond = conditionNodes[i % Math.max(1, conditionNodes.length)];
+    return {
+      id: `med_${i}`,
+      label: m.value,
+      subtitle: "Active Medication",
+      type: "medication",
+      color: "#10B981",
+      bgColor: "#ECFDF5",
+      borderColor: "#10B981",
+      textColor: "#047857",
+      x: centerX + r * Math.cos(angle),
+      y: centerY + r * Math.sin(angle),
+      radius: 18,
+      parentId: parentCond ? parentCond.id : "p1",
+    };
+  });
+
+  // Lab Biomarkers Tier (Right Orbit)
+  const labs = record.documents.flatMap((d) => d.extracted_results).slice(0, 6);
+  const labNodes: GraphNode[] = labs.map((l, i) => {
+    const angle = -Math.PI / 3 + (i / Math.max(1, labs.length - 1)) * (Math.PI * 0.7);
+    const r = 245;
+    const isAbnormal = l.status === "Low" || l.status === "High";
+    return {
+      id: `lab_${i}`,
       label: `${l.test_name}: ${l.value} ${l.unit}`,
+      subtitle: `Status: ${l.status}`,
       type: "lab",
-      color: "#00E5FF",
-    }));
+      color: isAbnormal ? "#F59E0B" : "#0EA5E9",
+      bgColor: isAbnormal ? "#FEF3C7" : "#F0F9FF",
+      borderColor: isAbnormal ? "#F59E0B" : "#0EA5E9",
+      textColor: isAbnormal ? "#B45309" : "#0369A1",
+      x: centerX + r * Math.cos(angle),
+      y: centerY + r * Math.sin(angle),
+      radius: 18,
+      parentId: conditionNodes.length > 0 && isAbnormal ? conditionNodes[0].id : "p1",
+    };
+  });
 
-  const allNodes = [patientNode, ...conditionNodes, ...symptomNodes, ...medicationNodes, ...labNodes];
+  const allNodes: GraphNode[] = [
+    patientNode,
+    ...conditionNodes,
+    ...symptomNodes,
+    ...medicationNodes,
+    ...labNodes,
+  ];
+
+  // Build semantic edges
+  const edges: GraphEdge[] = [];
+  allNodes.forEach((node) => {
+    if (node.parentId) {
+      edges.push({
+        from: node.parentId,
+        to: node.id,
+        label:
+          node.type === "medication"
+            ? "treats"
+            : node.type === "lab"
+            ? "monitors"
+            : "presents",
+      });
+    }
+  });
+
+  // Highlight active connections
+  const activeNodeId = hoveredNodeId || selectedNodeId;
+  const connectedNodeIds = new Set<string>();
+  if (activeNodeId) {
+    connectedNodeIds.add(activeNodeId);
+    edges.forEach((e) => {
+      if (e.from === activeNodeId) connectedNodeIds.add(e.to);
+      if (e.to === activeNodeId) connectedNodeIds.add(e.from);
+    });
+  }
+
+  const selectedNode = allNodes.find((n) => n.id === selectedNodeId) || patientNode;
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
@@ -66,10 +203,10 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
             <GitBranch className="w-5 h-5 text-[#0EA5E9]" aria-hidden="true" />
-            Clinical Timeline & Knowledge Graph Lite (FR9 & FR10)
+            Clinical Timeline & Knowledge Graph (FR9 & FR10)
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Explore chronological event history and visual relationship mappings over structured patient data.
+            Explore multi-tiered semantic relationship mappings and chronological report history across patient data.
           </p>
         </div>
 
@@ -104,55 +241,93 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
         </div>
       </div>
 
-      {/* KNOWLEDGE GRAPH LITE (FR10) */}
+      {/* KNOWLEDGE GRAPH (FR10) */}
       {activeSubTab === "graph" && (
         <div id="graph-subpanel" role="tabpanel" className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-md space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          {/* Graph Legend Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <Share2 className="w-4 h-4 text-[#0EA5E9]" aria-hidden="true" />
-              <h3 className="text-sm font-bold text-gray-800">Patient Intelligence Graph</h3>
+              <h3 className="text-sm font-bold text-gray-800">Semantic Patient Intelligence Graph</h3>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono font-semibold text-slate-600">
-              <span className="flex items-center gap-1"><Circle className="w-2.5 h-2.5 fill-purple-500 text-purple-500" aria-hidden="true" /> Patient</span>
-              <span className="flex items-center gap-1"><Circle className="w-2.5 h-2.5 fill-[#0EA5E9] text-[#0EA5E9]" aria-hidden="true" /> Condition</span>
-              <span className="flex items-center gap-1"><Circle className="w-2.5 h-2.5 fill-[#22C55E] text-[#22C55E]" aria-hidden="true" /> Medication</span>
-              <span className="flex items-center gap-1"><Circle className="w-2.5 h-2.5 fill-[#14B8A6] text-[#14B8A6]" aria-hidden="true" /> Lab Value</span>
+            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-700">
+              <span className="flex items-center gap-1.5"><Circle className="w-3 h-3 fill-[#8B5CF6] text-[#8B5CF6]" /> Patient</span>
+              <span className="flex items-center gap-1.5"><Circle className="w-3 h-3 fill-[#3B82F6] text-[#3B82F6]" /> Condition</span>
+              <span className="flex items-center gap-1.5"><Circle className="w-3 h-3 fill-[#F43F5E] text-[#F43F5E]" /> Symptom</span>
+              <span className="flex items-center gap-1.5"><Circle className="w-3 h-3 fill-[#10B981] text-[#10B981]" /> Medication</span>
+              <span className="flex items-center gap-1.5"><Circle className="w-3 h-3 fill-[#0EA5E9] text-[#0EA5E9]" /> Lab Biomarker</span>
             </div>
           </div>
 
-          {/* SVG Force Layout Relationship Graph */}
-          <div className="relative min-h-[350px] sm:min-h-[420px] bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-            <svg className="w-full h-[350px] sm:h-[400px]" viewBox="0 0 800 400">
-              {/* Lines from Patient (400, 200) to surrounding nodes */}
-              {allNodes.map((node, i) => {
-                if (node.id === "p1") return null;
-                const angle = ((i - 1) / (allNodes.length - 1)) * 2 * Math.PI;
-                const radius = 140;
-                const x = 400 + radius * Math.cos(angle);
-                const y = 200 + radius * Math.sin(angle);
+          {/* SVG Multi-Tier Canvas */}
+          <div className="relative min-h-[420px] sm:min-h-[480px] bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+            <svg className="w-full h-[420px] sm:h-[480px]" viewBox={`0 0 ${width} ${height}`}>
+              <defs>
+                <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.08" />
+                </filter>
+              </defs>
+
+              {/* Render Relationships (Edges) */}
+              {edges.map((edge, i) => {
+                const source = allNodes.find((n) => n.id === edge.from);
+                const target = allNodes.find((n) => n.id === edge.to);
+                if (!source || !target) return null;
+
+                const isConnected =
+                  !activeNodeId ||
+                  (connectedNodeIds.has(source.id) && connectedNodeIds.has(target.id));
+
+                const midX = (source.x + target.x) / 2;
+                const midY = (source.y + target.y) / 2;
 
                 return (
-                  <g key={`edge_${node.id}`}>
+                  <g key={`edge_${i}`} className="transition-opacity duration-300">
                     <line
-                      x1={400}
-                      y1={200}
-                      x2={x}
-                      y2={y}
-                      stroke="#CBD5E1"
-                      strokeWidth="2"
-                      strokeDasharray="4 2"
+                      x1={source.x}
+                      y1={source.y}
+                      x2={target.x}
+                      y2={target.y}
+                      stroke={isConnected ? "#94A3B8" : "#E2E8F0"}
+                      strokeWidth={isConnected ? (activeNodeId ? "2.5" : "1.5") : "1"}
+                      strokeDasharray={edge.from === "p1" ? "4 3" : "none"}
+                      opacity={isConnected ? 0.95 : 0.2}
                     />
+                    {edge.label && isConnected && (
+                      <g transform={`translate(${midX}, ${midY})`}>
+                        <rect
+                          x="-22"
+                          y="-8"
+                          width="44"
+                          height="14"
+                          rx="4"
+                          fill="#FFFFFF"
+                          stroke="#CBD5E1"
+                          strokeWidth="0.8"
+                        />
+                        <text
+                          x="0"
+                          y="2"
+                          textAnchor="middle"
+                          fill="#64748B"
+                          fontSize="9"
+                          fontWeight="600"
+                          className="select-none font-mono"
+                        >
+                          {edge.label}
+                        </text>
+                      </g>
+                    )}
                   </g>
                 );
               })}
 
               {/* Render Nodes */}
-              {allNodes.map((node, i) => {
+              {allNodes.map((node) => {
                 const isPatient = node.id === "p1";
-                const angle = isPatient ? 0 : ((i - 1) / (allNodes.length - 1)) * 2 * Math.PI;
-                const radius = isPatient ? 0 : 140;
-                const x = isPatient ? 400 : 400 + radius * Math.cos(angle);
-                const y = isPatient ? 200 : 200 + radius * Math.sin(angle);
+                const isSelected = selectedNodeId === node.id;
+                const isHovered = hoveredNodeId === node.id;
+                const isDimmed = activeNodeId && !connectedNodeIds.has(node.id);
 
                 return (
                   <g
@@ -160,48 +335,101 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
                     role="button"
                     tabIndex={0}
                     aria-label={`Graph node ${node.label}, type ${node.type}`}
-                    onClick={() => setSelectedNode(node)}
+                    onClick={() => setSelectedNodeId(node.id)}
+                    onMouseEnter={() => setHoveredNodeId(node.id)}
+                    onMouseLeave={() => setHoveredNodeId(null)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedNode(node);
+                        setSelectedNodeId(node.id);
                       }
                     }}
-                    className="cursor-pointer group focus-visible:outline-none"
+                    className={`cursor-pointer transition-all duration-300 focus-visible:outline-none ${
+                      isDimmed ? "opacity-25" : "opacity-100"
+                    }`}
                   >
+                    {/* Node Outer Halo / Ring */}
                     <circle
-                      cx={x}
-                      cy={y}
-                      r={isPatient ? 28 : 18}
-                      fill={node.color}
-                      fillOpacity={0.25}
-                      stroke={node.color}
-                      strokeWidth={isPatient ? 3 : 2}
-                      className="transition-all duration-300 group-hover:scale-125 group-focus-visible:stroke-sky-600 group-focus-visible:stroke-4"
+                      cx={node.x}
+                      cy={node.y}
+                      r={node.radius + (isSelected || isHovered ? 6 : 2)}
+                      fill={node.bgColor}
+                      stroke={node.borderColor}
+                      strokeWidth={isSelected ? 3 : 2}
+                      filter="url(#shadow)"
+                      className="transition-all duration-200"
                     />
-                    <text
-                      x={x}
-                      y={y + (isPatient ? 45 : 32)}
-                      textAnchor="middle"
-                      fill="#1E293B"
-                      fontSize={isPatient ? "12" : "10"}
-                      fontWeight={isPatient ? "700" : "600"}
-                      className="select-none font-mono"
-                    >
-                      {node.label.length > 20 ? node.label.slice(0, 18) + "..." : node.label}
-                    </text>
+
+                    {/* Node Inner Core Dot */}
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={node.radius - 8}
+                      fill={node.color}
+                      fillOpacity={0.85}
+                    />
+
+                    {/* Node Label Card Backdrop */}
+                    <g transform={`translate(${node.x}, ${node.y + node.radius + 14})`}>
+                      <rect
+                        x={-Math.min(100, node.label.length * 4.2 + 12) / 2}
+                        y="-10"
+                        width={Math.min(100, node.label.length * 4.2 + 12)}
+                        height="20"
+                        rx="10"
+                        fill="#FFFFFF"
+                        stroke={isSelected ? node.borderColor : "#E2E8F0"}
+                        strokeWidth={isSelected ? "1.5" : "1"}
+                        filter="url(#shadow)"
+                      />
+                      <text
+                        x="0"
+                        y="3"
+                        textAnchor="middle"
+                        fill={node.textColor}
+                        fontSize="10"
+                        fontWeight="700"
+                        className="select-none font-sans"
+                      >
+                        {node.label.length > 22 ? node.label.slice(0, 20) + "..." : node.label}
+                      </text>
+                    </g>
                   </g>
                 );
               })}
             </svg>
 
-            {/* Selected Node Details Popover */}
-            {selectedNode && (
-              <div role="status" className="absolute bottom-4 right-4 bg-white border border-slate-200 rounded-xl p-3 shadow-lg text-xs space-y-1 max-w-xs font-mono animate-fadeIn">
-                <div className="text-[#0EA5E9] font-bold">{selectedNode.label}</div>
-                <div className="text-slate-500">Node Type: {selectedNode.type}</div>
+            {/* Selected Node Details Drawer Bar */}
+            <div className="w-full bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-2">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shadow-xs shrink-0"
+                  style={{ backgroundColor: selectedNode.color }}
+                >
+                  {selectedNode.type === "patient" && <User className="w-5 h-5" />}
+                  {selectedNode.type === "condition" && <HeartPulse className="w-5 h-5" />}
+                  {selectedNode.type === "symptom" && <Activity className="w-5 h-5" />}
+                  {selectedNode.type === "medication" && <Pill className="w-5 h-5" />}
+                  {selectedNode.type === "lab" && <FlaskConical className="w-5 h-5" />}
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    {selectedNode.label}
+                    <span
+                      className="px-2 py-0.5 rounded-md text-[10px] uppercase font-mono font-semibold"
+                      style={{ backgroundColor: selectedNode.bgColor, color: selectedNode.textColor }}
+                    >
+                      {selectedNode.type}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500">{selectedNode.subtitle}</div>
+                </div>
               </div>
-            )}
+
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-mono self-end sm:self-center">
+                <Info className="w-4 h-4 text-[#0EA5E9]" /> Click any node to inspect relationships & clinical provenance
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -224,7 +452,6 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
               const isExpanded = expandedDocId === doc.document_id;
               return (
                 <div key={doc.document_id} className="relative space-y-2">
-                  {/* Timeline node icon dot */}
                   <div className="absolute -left-[29px] top-1.5 w-4 h-4 rounded-full bg-[#0EA5E9] border-4 border-white shadow-xs" aria-hidden="true" />
 
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
@@ -251,25 +478,28 @@ export const TimelineAndKnowledgeGraph: React.FC<TimelineAndKnowledgeGraphProps>
                     </button>
 
                     {isExpanded && (
-                      <div className="pt-3 border-t border-slate-200 space-y-3 text-xs animate-fadeIn">
-                        <div className="p-3 bg-white border border-slate-200 rounded-lg text-slate-700 leading-relaxed font-mono">
-                          <strong className="text-[#0EA5E9] block mb-1">Mini Summary:</strong>
-                          {doc.mini_summary || "Document parsed and indexed."}
-                        </div>
+                      <div className="pt-3 border-t border-slate-200 space-y-3 text-xs">
+                        {doc.mini_summary && (
+                          <div className="bg-sky-50 border border-sky-200 text-sky-900 rounded-lg p-2.5 font-sans">
+                            <span className="font-bold">Report Summary: </span>{doc.mini_summary}
+                          </div>
+                        )}
 
-                        <div className="space-y-1">
-                          <strong className="text-slate-500 block font-mono text-[10px] uppercase font-bold">
-                            Extracted Findings:
-                          </strong>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className="space-y-1.5">
+                          <div className="font-bold text-slate-700 font-mono uppercase text-[10px]">Extracted Biomarkers ({doc.extracted_results.length}):</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {doc.extracted_results.map((l) => (
-                              <div
-                                key={l.id}
-                                className="p-2 bg-white rounded border border-slate-200 flex justify-between font-mono text-[11px]"
-                              >
-                                <span className="font-bold text-gray-800">{l.test_name}</span>
-                                <span className="text-[#0EA5E9] font-bold">
-                                  {l.value} {l.unit} ({l.status})
+                              <div key={l.id} className="bg-white border border-slate-200 rounded-lg p-2 flex items-center justify-between font-mono">
+                                <div>
+                                  <span className="font-bold text-slate-800">{l.test_name}</span>
+                                  <div className="text-[10px] text-slate-500">{l.value} {l.unit}</div>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  l.status === "Low" ? "bg-amber-100 text-amber-800" :
+                                  l.status === "High" ? "bg-red-100 text-red-800" :
+                                  "bg-emerald-100 text-emerald-800"
+                                }`}>
+                                  {l.status}
                                 </span>
                               </div>
                             ))}
