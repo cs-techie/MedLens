@@ -3,9 +3,25 @@ import { generateSafeAISummary } from "@/lib/summaryEngine";
 import { MedicalRecord } from "@/types/medlens";
 import { sanitizePatientInput } from "@/lib/security";
 import { reportCache } from "@/lib/cache";
+import { rateLimiter } from "@/lib/rateLimiter";
 
 export async function POST(request: Request) {
   try {
+    const identifier = rateLimiter.getIdentifier(request);
+    const rateCheck = rateLimiter.check(identifier, 30, 60000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Please wait before requesting another summary." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": Math.ceil(rateCheck.resetMs / 1000).toString(),
+            "X-RateLimit-Limit": rateCheck.limit.toString(),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
     const record: MedicalRecord = await request.json();
     if (!record || !record.patient) {
       return NextResponse.json(

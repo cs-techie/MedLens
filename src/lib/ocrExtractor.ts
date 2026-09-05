@@ -206,8 +206,8 @@ export function processDocumentExtraction(
     const lines = rawText.split("\n");
     let count = 0;
     for (const line of lines) {
-      const match = line.match(/([A-Za-z0-9\s()-]+)[:\t]+(\d+(?:\.\d+)?)\s*([A-Za-z/%uLmgdL]+)?(?:\s*\(([0-9.\s\-<>]+)\))?/);
-      if (match) {
+      const match = line.match(/([A-Za-z0-9\s()-]+?)\s*[:\t]?\s*(\d+(?:\.\d+)?)\s*([A-Za-z/%uLmgdL]+)?(?:\s*\(?([0-9.\s\-<>]+)\)?)?/);
+      if (match && match[1].trim() && match[2]) {
         count++;
         const testName = match[1].trim();
         const valStr = match[2];

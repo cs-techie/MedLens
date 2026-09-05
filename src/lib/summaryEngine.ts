@@ -22,8 +22,10 @@ export function validateSummarySafety(text: string): boolean {
     return false;
   }
 
+  const contentOnly = text.slice(0, text.length - MANDATORY_DISCLAIMER_SENTENCE.length);
+
   for (const pattern of DISALLOWED_PATTERNS) {
-    if (pattern.test(text)) {
+    if (pattern.test(contentOnly)) {
       return false;
     }
   }
