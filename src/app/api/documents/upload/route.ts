@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { processDocumentExtraction, DEMO_SAMPLE_REPORTS } from "@/lib/ocrExtractor";
 import { sanitizeString, validateInputLength } from "@/lib/security";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

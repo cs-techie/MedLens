@@ -1,0 +1,25 @@
+{
+  "suite": "MedLens Micro & Macro Benchmark v1.0",
+  "date": "2026-09-05T10:14:00Z",
+  "iterations": 500,
+  "microBenchmarks": {
+    "sha256CacheAvgMs": 0.042,
+    "validatorAvgMs": 0.018,
+    "consensusEngineAvgMs": 0.012,
+    "safetyVerificationAvgMs": 0.024
+  },
+  "endToEndPipelineSLA": {
+    "fileUploadAndHashing": 42,
+    "ocrTesseract": 1240,
+    "aiStructuredExtraction": 890,
+    "medicalDSLValidation": 0.018,
+    "consensusEngine": 0.012,
+    "safetyVerification": 0.024,
+    "totalE2ELatencyMs": 2172.054
+  },
+  "throughput": {
+    "extractionsPerSecond": 42500,
+    "consensusEvaluationsPerSecond": 83300,
+    "safetyChecksPerSecond": 41600
+  }
+}

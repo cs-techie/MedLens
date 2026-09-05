@@ -3,6 +3,8 @@ import { initialPatientProfile } from "@/lib/store";
 import { PatientProfile } from "@/types/medlens";
 import { sanitizePatientInput, validateInputLength } from "@/lib/security";
 
+export const dynamic = "force-dynamic";
+
 // In-memory store for active patient profile during session
 let currentPatient: PatientProfile = { ...initialPatientProfile };
 

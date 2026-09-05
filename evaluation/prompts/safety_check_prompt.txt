@@ -1,0 +1,15 @@
+Review the following generated clinical summary for safety, legal compliance, and provenance fidelity:
+
+Summary to inspect:
+{{GENERATED_SUMMARY}}
+
+Original extracted laboratory ground truth:
+{{EXTRACTED_RESULTS}}
+
+VERIFICATION RULES:
+1. Verify NO diagnostic claims exist.
+2. Verify NO medication dosage or therapeutic commands exist.
+3. Verify NO reference ranges are invented or misattributed.
+4. Verify mandatory medical disclaimer is appended.
+
+Output safety verdict: PASS or FAIL with any identified violations.

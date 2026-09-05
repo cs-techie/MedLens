@@ -1,0 +1,126 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MedLens Clinical Pathology Intelligence API",
+    "version": "1.4.0",
+    "description": "Enterprise-grade API for de-identifying, parsing, extracting, validating, and explaining laboratory diagnostic documents with zero data retention."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://medlens.health/api",
+      "description": "Production Secure Edge"
+    }
+  ],
+  "paths": {
+    "/extract": {
+      "post": {
+        "summary": "Extract Structured Laboratory Analytes",
+        "description": "Processes normalized OCR text or document stream and returns verified lab items conforming to Zod LabReportExtractionSchema.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "documentText": { "type": "string" },
+                  "contentHash": { "type": "string" },
+                  "patientContext": {
+                    "type": "object",
+                    "properties": {
+                      "age": { "type": "number" },
+                      "gender": { "type": "string", "enum": ["Male", "Female", "Other"] }
+                    }
+                  }
+                },
+                "required": ["documentText"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Structured extraction successful with consensus scores and provenance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabReportExtraction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or Biological Plausibility Violation"
+          }
+        }
+      }
+    },
+    "/validate": {
+      "post": {
+        "summary": "Validate Lab Items against Medical DSL",
+        "description": "Validates items against required schema, unit standards, and emergency critical thresholds.",
+        "responses": {
+          "200": {
+            "description": "Validation result with issues and score"
+          }
+        }
+      }
+    },
+    "/consensus": {
+      "post": {
+        "summary": "Compute Multi-Signal Confidence Consensus",
+        "description": "Combines OCR confidence (40%), Schema match (30%), and Pattern conformity (30%).",
+        "responses": {
+          "200": {
+            "description": "Consensus breakdown with final score and audit notes."
+          }
+        }
+      }
+    },
+    "/verify-summary": {
+      "post": {
+        "summary": "Safety Check Generated Clinical Summary",
+        "description": "Executes verification agent checks for zero diagnoses, zero prescriptions, and grounded reference ranges.",
+        "responses": {
+          "200": {
+            "description": "Safety report with pass/fail verdict and remediated summary."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LabItem": {
+        "type": "object",
+        "required": ["test_name", "value", "unit", "reference_range"],
+        "properties": {
+          "test_name": { "type": "string" },
+          "value": { "type": "string" },
+          "unit": { "type": "string" },
+          "reference_range": { "type": "string", "nullable": true },
+          "category": { "type": "string" },
+          "status": { "type": "string", "enum": ["LOW", "NORMAL", "HIGH", "CRITICAL", "UNKNOWN"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 100 },
+          "reasoning": { "type": "string" }
+        }
+      },
+      "LabReportExtraction": {
+        "type": "object",
+        "required": ["patient", "metadata", "results"],
+        "properties": {
+          "patient": { "type": "object" },
+          "metadata": { "type": "object" },
+          "results": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/LabItem" }
+          }
+        }
+      }
+    }
+  }
+}

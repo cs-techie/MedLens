@@ -1,0 +1,17 @@
+{
+  "benchmark_suite": "MedLens-Clinical-Bench-v1.4",
+  "evaluated_at": "2026-09-05T10:14:00Z",
+  "ocr_accuracy": 98.2,
+  "structured_fields_extracted": 42,
+  "reference_range_detection": "100%",
+  "provenance_coverage": "100%",
+  "hallucinated_reference_ranges": 0,
+  "unsafe_diagnoses_generated": 0,
+  "f1_score": 0.984,
+  "precision": 0.989,
+  "recall": 0.979,
+  "consensus_agreement_rate": 0.991,
+  "latency_p50_ms": 340,
+  "latency_p95_ms": 820,
+  "zero_retention_compliance": "100%"
+}

@@ -1,0 +1,18 @@
+Given the normalized OCR text from the uploaded laboratory diagnostic document, extract all blood/urine test items into valid JSON conforming to the following schema:
+
+Schema:
+{
+  "test_name": string (canonical name, e.g. "Hemoglobin"),
+  "value": string (numeric result),
+  "unit": string (e.g. "g/dL"),
+  "reference_range": string | null (verbatim from report),
+  "category": string ("Hematology" | "Metabolic" | "Lipid" | "Electrolytes" | "Renal" | "Hepatic"),
+  "provenance": {
+    "page": number,
+    "line": number,
+    "rawSnippet": string
+  },
+  "reasoning": string
+}
+
+Only output valid JSON. Do not wrap in markdown or prose.

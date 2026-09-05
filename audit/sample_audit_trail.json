@@ -1,0 +1,63 @@
+[
+  {
+    "id": "aud_01j982a",
+    "timestamp": "2026-09-05T10:14:02.120Z",
+    "action": "DOCUMENT_UPLOADED",
+    "field": "CBC_Metabolic_Panel.pdf",
+    "actor": "Client_Session_Browser",
+    "verified": true,
+    "edited": false
+  },
+  {
+    "id": "aud_01j982b",
+    "timestamp": "2026-09-05T10:14:02.345Z",
+    "action": "DE_IDENTIFICATION_APPLIED",
+    "field": "Patient_MRN",
+    "previousValue": "MRN-9842109",
+    "newValue": "[REDACTED_BY_CLIENT_ZERO_RETENTION]",
+    "actor": "Client_Sanitization_Module",
+    "verified": true,
+    "edited": false
+  },
+  {
+    "id": "aud_01j982c",
+    "timestamp": "2026-09-05T10:14:03.480Z",
+    "action": "OCR_EXTRACTED",
+    "field": "Hemoglobin",
+    "newValue": "11.2 g/dL",
+    "actor": "Tesseract_Coordinate_Aligner",
+    "verified": true,
+    "edited": false
+  },
+  {
+    "id": "aud_01j982d",
+    "timestamp": "2026-09-05T10:14:03.712Z",
+    "action": "RANGE_BOUNDED",
+    "field": "Hemoglobin",
+    "previousValue": null,
+    "newValue": "12.0 - 15.5 g/dL (Report Anchor)",
+    "actor": "ReferenceRangeEngine",
+    "verified": true,
+    "edited": false
+  },
+  {
+    "id": "aud_01j982e",
+    "timestamp": "2026-09-05T10:14:04.102Z",
+    "action": "VALIDATION_PASSED",
+    "field": "Hemoglobin",
+    "newValue": "Confidence: 98% (OCR 96%, Pattern 98%, Schema 100%)",
+    "actor": "ConsensusEngine",
+    "verified": true,
+    "edited": false
+  },
+  {
+    "id": "aud_01j982f",
+    "timestamp": "2026-09-05T10:14:04.650Z",
+    "action": "VERIFICATION_CHECKED",
+    "field": "Executive_Summary",
+    "newValue": "Zero diagnostic assertions, zero prescriptive directives, all ranges grounded.",
+    "actor": "SafetyCheckerAgent",
+    "verified": true,
+    "edited": false
+  }
+]
