@@ -9,6 +9,7 @@ export interface RateLimitResult {
   limit: number;
   remaining: number;
   resetMs: number;
+  retryAfterSeconds: number;
 }
 
 interface ClientWindow {
@@ -40,24 +41,29 @@ class RateLimiterService {
         limit: maxRequests,
         remaining: maxRequests - 1,
         resetMs: windowDuration,
+        retryAfterSeconds: 0,
       };
     }
 
     if (clientWindow.count >= maxRequests) {
+      const resetMs = Math.max(0, clientWindow.resetTime - now);
       return {
         allowed: false,
         limit: maxRequests,
         remaining: 0,
-        resetMs: Math.max(0, clientWindow.resetTime - now),
+        resetMs,
+        retryAfterSeconds: Math.ceil(resetMs / 1000),
       };
     }
 
     clientWindow.count++;
+    const resetMs = Math.max(0, clientWindow.resetTime - now);
     return {
       allowed: true,
       limit: maxRequests,
       remaining: maxRequests - clientWindow.count,
-      resetMs: Math.max(0, clientWindow.resetTime - now),
+      resetMs,
+      retryAfterSeconds: 0,
     };
   }
 
@@ -82,3 +88,15 @@ class RateLimiterService {
 }
 
 export const rateLimiter = new RateLimiterService();
+
+export function checkRateLimit(
+  clientId: string,
+  maxRequests?: number,
+  windowMs?: number
+): RateLimitResult {
+  return rateLimiter.check(clientId, maxRequests, windowMs);
+}
+
+export function resetRateLimiterState(): void {
+  rateLimiter.clear();
+}

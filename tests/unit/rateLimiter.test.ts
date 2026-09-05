@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { rateLimiter } from "@/lib/rateLimiter";
+import { rateLimiter, checkRateLimit, resetRateLimiterState } from "@/lib/rateLimiter";
 
 describe("API Rate Limiter Service", () => {
   beforeEach(() => {
-    rateLimiter.clear();
+    resetRateLimiterState();
   });
 
   it("allows requests within configured limit threshold", () => {
@@ -72,5 +72,37 @@ describe("API Rate Limiter Service", () => {
 
     const reqDefault = new Request("http://localhost/api/test");
     expect(rateLimiter.getIdentifier(reqDefault)).toBe("127.0.0.1");
+  });
+
+  describe("checkRateLimit standalone helper function", () => {
+    it("allows first request from a new client and tracks remaining count", () => {
+      const result = checkRateLimit("client-a", 3, 60000);
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(2);
+    });
+
+    it("blocks requests once max is exceeded and reports retryAfterSeconds", () => {
+      checkRateLimit("client-c", 2, 60000);
+      checkRateLimit("client-c", 2, 60000);
+      const blocked = checkRateLimit("client-c", 2, 60000);
+      expect(blocked.allowed).toBe(false);
+      expect(blocked.remaining).toBe(0);
+      expect(blocked.retryAfterSeconds).toBeGreaterThan(0);
+    });
+
+    it("tracks separate clients independently with checkRateLimit helper", () => {
+      checkRateLimit("client-d", 1, 60000);
+      const otherClient = checkRateLimit("client-e", 1, 60000);
+      expect(otherClient.allowed).toBe(true);
+    });
+
+    it("resets window state when resetRateLimiterState is called", () => {
+      checkRateLimit("client-f", 1, 60000);
+      expect(checkRateLimit("client-f", 1, 60000).allowed).toBe(false);
+
+      resetRateLimiterState();
+
+      expect(checkRateLimit("client-f", 1, 60000).allowed).toBe(true);
+    });
   });
 });

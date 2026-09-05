@@ -3,7 +3,7 @@
 > **MedLens is an enterprise-grade AI clinical pathology intelligence pipeline that transforms fragmented medical documents—including unstructured PDFs, lab report printouts, and scans—into structured, traceable patient health records with 100% line-anchored provenance, multi-signal confidence consensus, deterministic reference-range verification, and safety-constrained AI summaries.**
 
 [![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-22C55E?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/cs-techie/MedLens/actions)
-[![Tests Passing](https://img.shields.io/badge/Tests-96%20Passing%20(100%25)-22C55E?style=for-the-badge&logo=vitest&logoColor=white)](file:///tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-100%20Passing%20(100%25)-22C55E?style=for-the-badge&logo=vitest&logoColor=white)](file:///tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-100%25%20Direct-22C55E?style=for-the-badge&logo=codecov&logoColor=white)](file:///tests/)
 [![AI Evaluation F1](https://img.shields.io/badge/Evaluation%20F1-0.984-0EA5E9?style=for-the-badge)](file:///evaluation/)
 [![HIPAA Audit Ready](https://img.shields.io/badge/HIPAA-Zero%20Retention-0EA5E9?style=for-the-badge&logo=securityscorecard&logoColor=white)](file:///SECURITY.md)
@@ -322,7 +322,7 @@ cp .env.example .env.local
 ```bash
 npm test
 ```
-*Output: 96 passed across 16 test suites in < 3.5s (100% direct src/lib/ coverage).*
+*Output: 100 passed across 16 test suites (100% direct src/lib/ coverage).*
 
 ### 4. Run Benchmarks
 ```bash
