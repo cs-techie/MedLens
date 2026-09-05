@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { initialMedicalRecord } from "@/lib/store";
+import { initialMedicalRecord, emptyMedicalRecord } from "@/lib/store";
 import { MedicalRecord, PatientProfile, DocumentRecord, AISummary } from "@/types/medlens";
 import { LandingPage } from "@/components/LandingPage";
 import { IntakeForm } from "@/components/IntakeForm";
@@ -21,16 +21,22 @@ import {
   ShieldAlert,
   Globe,
   Menu,
-  X
+  X,
+  Database
 } from "lucide-react";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<"landing" | "app">("landing");
-  const [record, setRecord] = useState<MedicalRecord>(initialMedicalRecord);
+  const [record, setRecord] = useState<MedicalRecord>(emptyMedicalRecord);
   const [activeTab, setActiveTab] = useState<
     "intake" | "upload" | "dashboard" | "evidence" | "summary" | "timeline"
   >("intake");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLoadDemoRecord = () => {
+    setRecord(initialMedicalRecord);
+  };
+
 
   const handleSaveProfile = (updatedProfile: PatientProfile) => {
     setRecord((prev) => ({
@@ -150,6 +156,17 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Quick Demo Data Loader Button */}
+            <button
+              onClick={handleLoadDemoRecord}
+              aria-label="Load demo sample patient data"
+              title="Pre-fill sample patient intake & lab report for testing"
+              className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-700 text-xs font-bold flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none transition min-h-[38px] shadow-xs"
+            >
+              <Database className="w-3.5 h-3.5 text-[#0EA5E9]" aria-hidden="true" />
+              <span>Load Demo Data</span>
+            </button>
+
             {/* View Switcher Button */}
             <button
               onClick={() => setCurrentView("landing")}
@@ -162,15 +179,22 @@ export default function Home() {
 
             {/* Active Patient Summary Chip */}
             <div className="hidden md:flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 text-xs">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#22C55E] animate-pulse" aria-hidden="true" />
+              <div className={`w-2.5 h-2.5 rounded-full ${record.patient.name.value ? "bg-[#22C55E] animate-pulse" : "bg-amber-400"}`} aria-hidden="true" />
               <div>
                 <span className="text-slate-500">Patient: </span>
-                <strong className="text-gray-800">{record.patient.name.value}</strong>
-                <span className="text-slate-500 ml-1">
-                  ({record.patient.age.value} yrs, {record.patient.sex.value})
-                </span>
+                {record.patient.name.value ? (
+                  <>
+                    <strong className="text-gray-800">{record.patient.name.value}</strong>
+                    <span className="text-slate-500 ml-1">
+                      ({record.patient.age.value} yrs, {record.patient.sex.value})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-amber-700 font-semibold italic">Intake Pending (Tab 1)</span>
+                )}
               </div>
             </div>
+
 
             {/* Mobile Navigation Toggle Button */}
             <button
@@ -264,23 +288,32 @@ export default function Home() {
               record={record}
               onVerifyField={handleVerifyField}
               onEditField={handleEditField}
+              onLoadDemoData={handleLoadDemoRecord}
             />
           )}
 
           {activeTab === "evidence" && (
-            <EvidenceSplitViewer documents={record.documents} />
+            <EvidenceSplitViewer
+              documents={record.documents}
+              onLoadDemoData={handleLoadDemoRecord}
+            />
           )}
 
           {activeTab === "summary" && (
             <AISummaryViewer
               record={record}
               onSummaryGenerated={handleSummaryGenerated}
+              onLoadDemoData={handleLoadDemoRecord}
             />
           )}
 
           {activeTab === "timeline" && (
-            <TimelineAndKnowledgeGraph record={record} />
+            <TimelineAndKnowledgeGraph
+              record={record}
+              onLoadDemoData={handleLoadDemoRecord}
+            />
           )}
+
         </div>
       </main>
 
