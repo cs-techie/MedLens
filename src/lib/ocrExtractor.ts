@@ -26,7 +26,7 @@ export const DEMO_SAMPLE_REPORTS: DemoSampleReport[] = [
     description: "Sample lab report for a patient with persistent fatigue showing low hemoglobin & ferritin.",
     filename: "CBC_Comprehensive_Iron_Panel_2026.pdf",
     rawText: `METROPOLITAN CLINICAL LABORATORIES
-PATIENT: Eleanor Vance | AGE: 42 | SEX: F | DATE: 2026-09-02
+PATIENT: Alex Taylor | AGE: 42 | SEX: F | DATE: 2026-09-02
 
 COMPLETE BLOOD COUNT (CBC) WITH DIFFERENTIAL
 

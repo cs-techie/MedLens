@@ -35,7 +35,7 @@ describe("Summary Engine & Fallback Generator (summaryEngine.ts)", () => {
       const summary = generateDeterministicTemplateSummary(initialMedicalRecord);
 
       expect(summary.source).toBe("ai_generated");
-      expect(summary.text).toContain("Eleanor Vance");
+      expect(summary.text).toContain("Alex Taylor");
       expect(summary.text).toContain("Laboratory Findings Outside Reported Ranges");
       expect(summary.text).toContain("Hemoglobin");
       expect(summary.text).toContain("Serum Ferritin");

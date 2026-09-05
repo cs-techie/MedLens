@@ -106,7 +106,7 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({
               value={profile.name.value}
               onChange={(e) => handleTextChange("name", e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-gray-900 text-sm focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none transition"
-              placeholder="e.g. Eleanor Vance"
+              placeholder="e.g. Alex Taylor"
             />
           </div>
 

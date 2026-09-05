@@ -71,7 +71,7 @@ describe("Medical Zod Validation Schemas (schemas.ts)", () => {
   describe("LabReportExtractionSchema", () => {
     it("parses full extraction payload with patient metadata and lab array", () => {
       const payload = LabReportExtractionSchema.parse({
-        patient: { name: "Eleanor Vance", age: 42, gender: "Female" },
+        patient: { name: "Alex Taylor", age: 42, gender: "Female" },
         metadata: { reportType: "CBC Panel" },
         results: [
           {
@@ -83,7 +83,7 @@ describe("Medical Zod Validation Schemas (schemas.ts)", () => {
         ],
       });
 
-      expect(payload.patient.name).toBe("Eleanor Vance");
+      expect(payload.patient.name).toBe("Alex Taylor");
       expect(payload.results).toHaveLength(1);
     });
   });

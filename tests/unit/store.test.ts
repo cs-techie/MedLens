@@ -3,7 +3,7 @@ import { initialPatientProfile, initialDocuments, initialMedicalRecord } from "@
 
 describe("Patient Intake & Document State Store (store.ts)", () => {
   it("exports initialPatientProfile with user provenance and default fields", () => {
-    expect(initialPatientProfile.name.value).toBe("Eleanor Vance");
+    expect(initialPatientProfile.name.value).toBe("Alex Taylor");
     expect(initialPatientProfile.name.source).toBe("user");
     expect(initialPatientProfile.name.confidence).toBe(100);
     expect(initialPatientProfile.symptoms.length).toBeGreaterThan(0);
@@ -26,7 +26,7 @@ describe("Patient Intake & Document State Store (store.ts)", () => {
   });
 
   it("exports initialMedicalRecord linking patient, documents, and safe AI summary", () => {
-    expect(initialMedicalRecord.patient.name.value).toBe("Eleanor Vance");
+    expect(initialMedicalRecord.patient.name.value).toBe("Alex Taylor");
     expect(initialMedicalRecord.documents).toHaveLength(1);
     expect(initialMedicalRecord.ai_summary).toBeDefined();
     expect(initialMedicalRecord.ai_summary?.text).toContain("microcytic anemia");

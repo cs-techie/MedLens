@@ -251,7 +251,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-gray-800">Live Medical Intelligence Dashboard</h3>
-                  <span className="text-[10px] text-slate-500 font-mono">Patient: Eleanor Vance (42 yrs)</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Patient: Alex Taylor (42 yrs)</span>
                 </div>
               </div>
 

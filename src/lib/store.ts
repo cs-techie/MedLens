@@ -10,7 +10,7 @@ function createDefaultField<T>(value: T): ProvenanceField<T> {
 }
 
 export const initialPatientProfile: PatientProfile = {
-  name: createDefaultField("Eleanor Vance"),
+  name: createDefaultField("Alex Taylor"),
   age: createDefaultField(42),
   sex: createDefaultField("Female"),
   symptoms: [
@@ -38,7 +38,7 @@ export const initialDocuments: DocumentRecord[] = [
     upload_date: new Date(Date.now() - 86400000 * 3).toISOString(),
     page_count: 1,
     raw_ocr_text: `METROPOLITAN CLINICAL LABORATORIES
-PATIENT: Eleanor Vance | AGE: 42 | SEX: F | DATE: 2026-09-02
+PATIENT: Alex Taylor | AGE: 42 | SEX: F | DATE: 2026-09-02
 
 COMPLETE BLOOD COUNT (CBC) WITH DIFFERENTIAL
 
